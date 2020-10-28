@@ -195,8 +195,7 @@ export default {
     };
 
     const getWorks = ({ date, openId }) => {
-      // TODO: PartLoading 影响切换月份
-      // partLoading.value = true;
+      partLoading.value = true;
       Taro.cloud
         .callFunction({
           name: "getWork",
