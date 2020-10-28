@@ -1,0 +1,28 @@
+.about {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+
+  .logout {
+    color: red;
+    border-color: red;
+  }
+
+  .me {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+
+    .at-list__item-container .item-thumb {
+      width: 120px;
+      height: 120px;
+    }
+  }
+
+  .nick-name {
+    margin: 15px 0;
+  }
+}
