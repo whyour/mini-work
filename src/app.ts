@@ -13,6 +13,7 @@ import {
   AtMessage,
   AtCheckbox,
   AtAvatar,
+  AtSwitch,
 } from "taro-ui-vue3";
 import Taro from "@tarojs/taro";
 import "./app.scss";
@@ -70,5 +71,6 @@ App.component('AtListItem', AtListItem);
 App.component("AtMessage", AtMessage);
 App.component("AtCheckbox", AtCheckbox);
 App.component("AtAvatar", AtAvatar);
+App.component("AtSwitch", AtSwitch);
 
 export default App;

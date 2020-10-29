@@ -16,79 +16,72 @@
       <view class="part-loading" v-if="partLoading">
         <at-activity-indicator></at-activity-indicator>
       </view>
-      <view v-if="!partLoading" class="timeline-work-wrap" :class="{'delete-work-wrap': deleteWorkState}">
+      <view
+        v-if="!partLoading"
+        class="timeline-work-wrap"
+        :class="{ 'delete-work-wrap': deleteWorkState }"
+      >
         <view v-if="deleteWorkState">
           <at-checkbox
-          :options="workList"
-          :selectedList="checkedList"
-          @change="checkListChange"
-        />
-        <at-button
-          type="primary"
-          @click="deleteWorks"
-          style="margin: 8px 0"
-          :loading="submitting"
-          :disabled="submitting"
-        >
-          确认
-        </at-button>
-        <at-button type="secondary" @click="cancelDeleteWorkState">
-          取消
-        </at-button>
+            :options="workList"
+            :selectedList="checkedList"
+            @change="checkListChange"
+          />
+          <at-button
+            type="primary"
+            @click="deleteWorks"
+            style="margin: 8px 0"
+            :loading="submitting"
+            :disabled="submitting"
+          >
+            确认
+          </at-button>
+          <at-button type="secondary" @click="cancelDeleteWorkState">
+            取消
+          </at-button>
         </view>
         <view v-if="!deleteWorkState">
           <at-timeline class="timeline" :items="list"></at-timeline>
-        <at-timeline class="month-line" :items="month"></at-timeline>
-        <view class="at-row at-row__justify--around">
-          <view class="at-col">
-            <at-button
-              class="add-work"
-              @click="addWork"
-              type="secondary"
-              :plain="true"
-            >
-              添加工时
-            </at-button>
+          <at-timeline class="month-line" :items="month"></at-timeline>
+          <view class="at-row at-row__justify--around">
+            <view class="at-col">
+              <at-button
+                class="add-work"
+                @click="addWork"
+                type="secondary"
+                :plain="true"
+              >
+                添加工时
+              </at-button>
+            </view>
+            <view class="at-col" v-if="list.length > 1">
+              <at-button
+                class="add-work danger"
+                @click="deleteWork"
+                :plain="true"
+              >
+                删除工时
+              </at-button>
+            </view>
           </view>
-          <view class="at-col" v-if="list.length > 1">
-            <at-button
-              class="add-work danger"
-              @click="deleteWork"
-              :plain="true"
-            >
-              删除工时
-            </at-button>
-          </view>
-        </view>
         </view>
       </view>
       <AtModal class="add-work-modal" :isOpened="addWorkModelShow">
         <AtModalContent>
-          <picker mode="selector" :range="pickers" @change="pickerChange" :class="{'picker-classify':work.classify === '请选择分类'}">
-            <AtList>
-              <AtListItem
-                title="分类"
-                :extraText="work.classify"
-              />
-            </AtList>
-          </picker>
-          <view v-if="!addWorkModelHide">
+          <at-switch
+            title="日薪模式"
+            :checked="switchValue"
+            @change="handleChange"
+            :border="false"
+          />
+          <view v-if="switchValue && !addWorkModelHide">
             <AtInput
               name="number"
-              title="个数"
+              title="薪资"
               type="number"
-              placeholder="总共个数"
-              :value="work.number"
-              @change="numberChange"
-              :border="false"
-            />
-            <AtInput
-              name="people"
-              title="人数"
-              type="number"
-              placeholder="总共人数"
-              :value="work.people"
-              @change="peopleChange"
+              placeholder="薪资"
+              :value="work.payroll"
+              @change="payrollChange"
               :border="false"
             />
             <AtInput
@@ -100,6 +93,48 @@
               @change="addressChange"
               :border="false"
             />
+          </view>
+          <view v-if="!switchValue">
+            <picker
+              mode="selector"
+              :value="pickerValue"
+              :range="pickers"
+              @change="pickerChange"
+              :class="{ 'picker-classify': !pickerValue }"
+            >
+              <AtList>
+                <AtListItem title="分类" :extraText="pickers[pickerValue]" />
+              </AtList>
+            </picker>
+            <view v-if="!addWorkModelHide">
+              <AtInput
+                name="number"
+                title="个数"
+                type="number"
+                placeholder="总共个数"
+                :value="work.number"
+                @change="numberChange"
+                :border="false"
+              />
+              <AtInput
+                name="people"
+                title="人数"
+                type="number"
+                placeholder="总共人数"
+                :value="work.people"
+                @change="peopleChange"
+                :border="false"
+              />
+              <AtInput
+                name="address"
+                title="地址"
+                type="text"
+                placeholder="地址"
+                :value="work.address"
+                @change="addressChange"
+                :border="false"
+              />
+            </view>
           </view>
         </AtModalContent>
         <AtModalAction>
@@ -132,8 +167,8 @@ import "./index.scss";
 
 export default {
   setup() {
-    const pickers = ["110门", "220门", "350门"];
-    let currentDate = ref(dayjs().valueOf());
+    const pickers = ["请选择分类", "110门", "220门", "350门"];
+    let currentDate = ref(dayjs().startOf("date").valueOf());
     let openId = ref("");
     let marks = ref([]);
     let list = ref([]);
@@ -145,11 +180,13 @@ export default {
     let addWorkModelShow = ref(false);
     let submitting = ref(false);
     let addWorkModelHide = ref(true);
+    let switchValue = ref(false);
+    let pickerValue = ref(0);
     let work = reactive({
-      classify: "请选择分类",
       number: "",
       address: "",
       people: "",
+      payroll: "",
     });
     const workList = computed({
       get() {
@@ -194,6 +231,20 @@ export default {
       getWorks({ date: number, openId });
     };
 
+    const getPricesAndNumbers = (data) => {
+      const numbers = [...data].reduce(
+        (acc, cur) => acc + (cur.number ? parseInt(cur.number) : 0),
+        0
+      );
+      const prices = [...data].reduce((acc, cur) => {
+        const price = cur.payroll
+          ? parseInt(cur.payroll)
+          : (parseInt(cur.price) * parseInt(cur.number)) / parseInt(cur.people);
+        return acc + price;
+      }, 0);
+      return { numbers, prices };
+    };
+
     const getWorks = ({ date, openId }) => {
       partLoading.value = true;
       Taro.cloud
@@ -209,23 +260,18 @@ export default {
             const _result = res.result.data || [];
             const result = _result.map((x) => {
               return {
-                title: `${x.address}, ${x.people}人，${x.price}门，${x.number}件`,
+                title: x.payroll
+                  ? `${x.address}${x.address ? ', ' : ''}日工资 ${x.payroll}元`
+                  : `${x.address}, ${x.people}人，${x.price}门，${x.number}件`,
                 icon: "check-circle",
                 _id: x._id,
               };
             });
-            const numbers = [...res.result.data].reduce(
-              (acc, cur) => acc + parseInt(cur.number),
-              0
-            );
-            const prices = [...res.result.data].reduce((acc, cur) => {
-              const price =
-                (parseInt(cur.price) * parseInt(cur.number)) /
-                parseInt(cur.people);
-              return acc + price;
-            }, 0);
+            const { numbers, prices } = getPricesAndNumbers(res.result.data);
             result.push({
-              title: `${new Date(currentDate.value).getDate()}日总计${numbers}件，${prices}元`,
+              title: `${new Date(
+                currentDate.value
+              ).getDate()}日总计${numbers}件，${prices}元`,
               icon: "check-circle",
             });
             list.value = result;
@@ -247,16 +293,7 @@ export default {
           },
         })
         .then((res) => {
-          const numbers = [...res.result.data].reduce(
-            (acc, cur) => acc + parseInt(cur.number),
-            0
-          );
-          const prices = [...res.result.data].reduce((acc, cur) => {
-            const price =
-              (parseInt(cur.price) * parseInt(cur.number)) /
-              parseInt(cur.people);
-            return acc + price;
-          }, 0);
+          const { numbers, prices } = getPricesAndNumbers(res.result.data);
           const _marks = [
             ...new Set([...res.result.data].map((x) => x.date)),
           ].map((x) => {
@@ -271,10 +308,15 @@ export default {
     };
 
     const monthChange = (value) => {
-      const nextMonth = dayjs(value)
-      const _currentDate = dayjs(currentDate.value)
-      const goingDate = dayjs().year(nextMonth.year()).month(nextMonth.month()).date(_currentDate.date())
-      const actualDateNumber = goingDate.isAfter(nextMonth.endOf('month')) ? nextMonth.endOf('month').valueOf() : goingDate.valueOf()
+      const nextMonth = dayjs(value);
+      const _currentDate = dayjs(currentDate.value);
+      const goingDate = dayjs()
+        .year(nextMonth.year())
+        .month(nextMonth.month())
+        .date(_currentDate.date());
+      const actualDateNumber = goingDate.isAfter(nextMonth.endOf("month"))
+        ? nextMonth.endOf("month").valueOf()
+        : goingDate.valueOf();
       currentDate.value = actualDateNumber;
       getWorks({ date: actualDateNumber, openId });
       getMonthWorks({ date: actualDateNumber, openId });
@@ -283,50 +325,58 @@ export default {
     const addWork = () => {
       addWorkModelShow.value = true;
       addWorkModelHide.value = false;
-      work.classify = "请选择分类";
+      pickerValue.value = 0;
       work.number = "";
       work.address = "";
       work.people = "";
+      work.payroll = "";
     };
 
     const pickerChange = (e) => {
-      work.classify = pickers[e.detail.value];
+      console.log(e.detail.value);
+      pickerValue.value = e.detail.value;
     };
 
     const submit = () => {
+      console.log(switchValue);
       if (
-        !work.classify ||
-        work.classify === "请选择分类" ||
-        !work.people ||
-        !work.number ||
-        !work.address ||
-        Number.isNaN(parseInt(work.people)) ||
-        Number.isNaN(parseInt(work.number))
+        (!switchValue.value &&
+          (pickerValue.value === 0 ||
+            !work.people ||
+            !work.number ||
+            !work.address ||
+            Number.isNaN(parseInt(work.people)) ||
+            Number.isNaN(parseInt(work.number)))) ||
+        (switchValue.value &&
+          (!work.payroll || Number.isNaN(parseInt(work.payroll))))
       ) {
         Taro.atMessage({ message: "输入参数有误", type: "error" });
         return;
       }
+
       submitting.value = true;
+      const price = pickers[pickerValue.value].slice(0, -1);
       Taro.cloud
         .callFunction({
           name: "addWork",
           data: {
             date: currentDate.value,
             number: work.number,
-            price: work.classify,
+            price,
             openId,
             address: work.address,
             people: work.people,
+            payroll: work.payroll,
           },
         })
         .then((res) => {
           if (res.result) {
-            this.close();
-            this.getWorks({
+            close();
+            getWorks({
               date: currentDate.value,
               openId,
             });
-            this.getMonthWorks({
+            getMonthWorks({
               date: currentDate.value,
               openId,
             });
@@ -389,6 +439,14 @@ export default {
         });
     };
 
+    const handleChange = (value) => {
+      switchValue.value = value;
+    };
+
+    const payrollChange = (value) => {
+      work.payroll = value;
+    };
+
     return {
       pickers,
       currentDate,
@@ -404,6 +462,8 @@ export default {
       addWorkModelShow,
       submitting,
       addWorkModelHide,
+      switchValue,
+      pickerValue,
       work,
       monthChange,
       onDayClick,
@@ -420,11 +480,13 @@ export default {
       checkListChange,
       cancelDeleteWorkState,
       deleteWork,
+      handleChange,
+      payrollChange,
     };
   },
 
   onShow() {
-    this.addWorkModelHide = true
-  }
+    this.addWorkModelHide = true;
+  },
 };
 </script>
