@@ -13,11 +13,11 @@
         @dayClick="onDayClick"
         :marks="marks"
       />
-      <view class="part-loading" v-if="partLoading">
+      <view class="part-loading" v-if="partLoadingDay || partLoadingMonth">
         <at-activity-indicator></at-activity-indicator>
       </view>
       <view
-        v-if="!partLoading"
+        v-if="!partLoadingDay && !partLoadingMonth"
         class="timeline-work-wrap"
         :class="{ 'delete-work-wrap': deleteWorkState }"
       >
@@ -163,7 +163,6 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import * as dayjs from "dayjs";
 import Taro from "@tarojs/taro";
-import "./index.scss";
 
 export default {
   setup() {
@@ -175,7 +174,8 @@ export default {
     let month = ref([]);
     let checkedList = ref([]);
     let loading = ref(true);
-    let partLoading = ref(true);
+    let partLoadingDay = ref(true);
+    let partLoadingMonth = ref(true);
     let deleteWorkState = ref(false);
     let addWorkModelShow = ref(false);
     let submitting = ref(false);
@@ -246,7 +246,7 @@ export default {
     };
 
     const getWorks = ({ date, openId }) => {
-      partLoading.value = true;
+      partLoadingDay.value = true;
       Taro.cloud
         .callFunction({
           name: "getWork",
@@ -275,12 +275,13 @@ export default {
               icon: "check-circle",
             });
             list.value = result;
-            partLoading.value = false;
+            partLoadingDay.value = false;
           }
         });
     };
 
     const getMonthWorks = ({ date, openId }) => {
+      partLoadingMonth.value = true;
       const min = dayjs(date).startOf("month").valueOf();
       const max = dayjs(date).endOf("month").valueOf();
       Taro.cloud
@@ -303,7 +304,7 @@ export default {
             { title: `本月总计${numbers}件，${prices}元`, icon: "sketch" },
           ];
           marks.value = _marks;
-          partLoading.value = false;
+          partLoadingMonth.value = false;
         });
     };
 
@@ -313,9 +314,9 @@ export default {
       const goingDate = dayjs()
         .year(nextMonth.year())
         .month(nextMonth.month())
-        .date(_currentDate.date());
-      const actualDateNumber = goingDate.isAfter(nextMonth.endOf("month"))
-        ? nextMonth.endOf("month").valueOf()
+        .date(_currentDate.date()).startOf("date");
+      const actualDateNumber = goingDate.isAfter(nextMonth.endOf("month").startOf("date"))
+        ? nextMonth.endOf("month").startOf("date").valueOf()
         : goingDate.valueOf();
       currentDate.value = actualDateNumber;
       getWorks({ date: actualDateNumber, openId });
@@ -338,7 +339,6 @@ export default {
     };
 
     const submit = () => {
-      console.log(switchValue);
       if (
         (!switchValue.value &&
           (pickerValue.value === 0 ||
@@ -457,7 +457,8 @@ export default {
       month,
       checkedList,
       loading,
-      partLoading,
+      partLoadingDay,
+      partLoadingMonth,
       deleteWorkState,
       addWorkModelShow,
       submitting,

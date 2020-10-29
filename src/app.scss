@@ -1,1 +1,17 @@
-@import "~taro-ui-vue3/dist/style/index.scss";
+@import '~taro-ui-vue3/dist/style/components/loading.scss';
+@import "~taro-ui-vue3/dist/style/components/icon.scss";
+@import "~taro-ui-vue3/dist/style/components/button.scss";
+@import "~taro-ui-vue3/dist/style/components/switch.scss";
+@import "~taro-ui-vue3/dist/style/components/calendar.scss";
+@import "~taro-ui-vue3/dist/style/components/activity-indicator.scss";
+@import "~taro-ui-vue3/dist/style/components/timeline.scss";
+@import "~taro-ui-vue3/dist/style/components/modal.scss";
+@import "~taro-ui-vue3/dist/style/components/input.scss";
+@import "~taro-ui-vue3/dist/style/components/list.scss";
+@import "~taro-ui-vue3/dist/style/components/avatar.scss";
+@import "~taro-ui-vue3/dist/style/components/checkbox.scss";
+@import "~taro-ui-vue3/dist/style/components/message.scss";
+@import "~taro-ui-vue3/dist/style/components/flex.scss";
+
+@import "pages/about/index.scss";
+@import "pages/index/index.scss";

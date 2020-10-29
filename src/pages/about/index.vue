@@ -29,7 +29,6 @@
 <script>
 import { ref, onMounted } from "vue";
 import Taro, { Config } from "@tarojs/taro";
-import "./index.scss";
 
 export default {
   setup() {
