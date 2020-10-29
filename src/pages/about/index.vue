@@ -14,14 +14,13 @@
         </at-button>
       </view>
       <view class="list-item" v-if="!user">
-        <button
+        <at-button
           type="primary"
-          class="login-btn"
           open-type="getUserInfo"
-          @getuserinfo="onGotUserInfo"
+          @getUserInfo="onGotUserInfo"
         >
           微信登录
-        </button>
+        </at-button>
       </view>
     </view>
   </view>

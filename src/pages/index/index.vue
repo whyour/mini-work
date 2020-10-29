@@ -72,7 +72,7 @@
             title="日薪模式"
             :checked="switchValue"
             @change="handleChange"
-            :border="false"
+            :border="true"
           />
           <view v-if="switchValue && !addWorkModelHide">
             <AtInput
@@ -261,7 +261,7 @@ export default {
             const result = _result.map((x) => {
               return {
                 title: x.payroll
-                  ? `${x.address}${x.address ? ', ' : ''}日工资 ${x.payroll}元`
+                  ? `${x.address}${x.address ? ", " : ""}日工资 ${x.payroll}元`
                   : `${x.address}, ${x.people}人，${x.price}门，${x.number}件`,
                 icon: "check-circle",
                 _id: x._id,
@@ -486,7 +486,9 @@ export default {
   },
 
   onShow() {
-    this.addWorkModelHide = true;
+    if (!this.addWorkModelShow) {
+      this.addWorkModelHide = true;
+    }
   },
 };
 </script>
