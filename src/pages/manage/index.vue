@@ -189,6 +189,21 @@ export default {
         });
     };
 
+    const _requestCloudMsgCheck = (text) => {
+      return new Promise((resolve)=>{
+        Taro.cloud.callFunction({
+          name: 'checkContent',
+          data: {
+            content: text
+          }
+        }).then(res => {
+          resolve(res.result.errCode === 0)
+        }).catch(err => {
+          resolve(false)
+        })
+      })
+    }
+
     const addType = () => {
       addTypeModelShow.value = true;
       addTypeModelHide.value = false;
@@ -197,9 +212,15 @@ export default {
       type._id = "";
     };
 
-    const submit = () => {
+    const submit = async () => {
       if (Number.isNaN(parseInt(type.price)) || !type.name) {
         Taro.atMessage({ message: "输入参数有误", type: "error" });
+        return;
+      }
+
+      const isLegal = await _requestCloudMsgCheck(type.name);
+      if(!isLegal){
+        Taro.atMessage({ message: "文本涉及敏感词", type: "error" });
         return;
       }
 
