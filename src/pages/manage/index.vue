@@ -67,10 +67,10 @@
     </panel>
     <AtModal
       class="add-work-modal"
-      :isOpened="!addWorkModelHide && addWorkModelShow"
+      :isOpened="addTypeModelShow"
     >
       <AtModalContent>
-        <view>
+        <view v-if="!addTypeModelHide">
           <AtInput
             name="number"
             title="名称"
@@ -125,9 +125,9 @@ export default {
   setup() {
     const types = ref([]);
     const loading = ref(true);
-    let addWorkModelShow = ref(false);
+    let addTypeModelShow = ref(false);
     let submitting = ref(false);
-    let addWorkModelHide = ref(true);
+    let addTypeModelHide = ref(true);
     let deleteTypeState = ref(false);
     let openId = ref("");
     let checkedList = ref([]);
@@ -152,6 +152,7 @@ export default {
           let _openId = res.data;
           getTypes(_openId);
           openId = _openId;
+          loading.value = false
         })
         .catch(() => {
           Taro.cloud
@@ -165,9 +166,10 @@ export default {
                 Taro.setStorage({ key: "openId", data: _openId });
                 getTypes(_openId);
                 openId = _openId;
+                loading.value = false
               }
             });
-        }).finally(()=>loading.value = false);
+        })
     });
 
     const getTypes = (openId) => {
@@ -183,13 +185,13 @@ export default {
           if (res.result && res.result.data && res.result.data.length > 0) {
             types.value = res.result.data;
           }
-        })
-        .finally(() => (partLoading.value = false));
+          partLoading.value = false
+        });
     };
 
     const addType = () => {
-      addWorkModelShow.value = true;
-      addWorkModelHide.value = false;
+      addTypeModelShow.value = true;
+      addTypeModelHide.value = false;
       type.name = "";
       type.price = "";
       type._id = "";
@@ -226,7 +228,7 @@ export default {
     };
 
     const close = () => {
-      addWorkModelShow.value = false;
+      addTypeModelShow.value = false;
     };
 
     const priceChange = (value) => {
@@ -238,8 +240,8 @@ export default {
     };
 
     const updateType = ({ _id, name, price }) => {
-      addWorkModelShow.value = true;
-      addWorkModelHide.value = false;
+      addTypeModelShow.value = true;
+      addTypeModelHide.value = false;
       type.name = name;
       type.price = price;
       type._id = _id;
@@ -286,9 +288,9 @@ export default {
     return {
       types,
       loading,
-      addWorkModelShow,
+      addTypeModelShow,
       submitting,
-      addWorkModelHide,
+      addTypeModelHide,
       type,
       addType,
       submit,
@@ -305,6 +307,12 @@ export default {
       typeList,
       partLoading
     };
+  },
+
+  onShow() {
+    if (!this.addTypeModelShow) {
+      this.addTypeModelHide = true;
+    }
   },
 };
 </script>
