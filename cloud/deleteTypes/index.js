@@ -6,10 +6,9 @@ cloud.init()
 // 云函数入口函数
 exports.main = async (event, context) => {
   const db = cloud.database()
-  return db.collection('types').update({
-    data: {
-      name: event.name,
-      price: event.price
-    }
-  })
+  const _ = db.command
+  return db.collection('types').where({
+    _id: _.in(event.ids),
+    openId: event.openId
+  }).remove()
 }

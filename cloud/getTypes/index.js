@@ -6,10 +6,7 @@ cloud.init()
 // 云函数入口函数
 exports.main = async (event, context) => {
   const db = cloud.database()
-  return db.collection('types').update({
-    data: {
-      name: event.name,
-      price: event.price
-    }
-  })
+  return db.collection('types').where({
+    openId: event.openId,
+  }).get()
 }

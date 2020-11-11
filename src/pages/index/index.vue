@@ -94,16 +94,16 @@
               :border="false"
             />
           </view>
-          <view v-if="!switchValue">
+          <view v-if="!switchValue && types.length > 0">
             <picker
               mode="selector"
               :value="pickerValue"
-              :range="pickers"
+              :range="types"
+              rangeKey="name"
               @change="pickerChange"
-              :class="{ 'picker-classify': !pickerValue }"
             >
               <AtList>
-                <AtListItem title="分类" :extraText="pickers[pickerValue]" />
+                <AtListItem title="分类" :extraText="types[pickerValue].name" />
               </AtList>
             </picker>
             <view v-if="!addWorkModelHide">
@@ -166,13 +166,13 @@ import Taro from "@tarojs/taro";
 
 export default {
   setup() {
-    const pickers = ["请选择分类", "110门", "220门", "350门"];
     let currentDate = ref(dayjs().startOf("date").valueOf());
     let openId = ref("");
     let marks = ref([]);
     let list = ref([]);
     let month = ref([]);
     let checkedList = ref([]);
+    let types = ref([]);
     let loading = ref(true);
     let partLoadingDay = ref(true);
     let partLoadingMonth = ref(true);
@@ -203,6 +203,7 @@ export default {
           let _openId = res.data;
           getWorks({ date: currentDate.value, openId: _openId });
           getMonthWorks({ date: currentDate.value, openId: _openId });
+          getTypes(_openId);
           loading.value = false;
           openId = _openId;
         })
@@ -218,6 +219,7 @@ export default {
                 Taro.setStorage({ key: "openId", data: _openId });
                 getWorks({ date: currentDate.value, openId: _openId });
                 getMonthWorks({ date: currentDate.value, openId: _openId });
+                getTypes(_openId);
                 loading.value = false;
                 openId = _openId;
               }
@@ -308,14 +310,32 @@ export default {
         });
     };
 
+    const getTypes = (openId) => {
+      Taro.cloud
+        .callFunction({
+          name: "getTypes",
+          data: {
+            openId,
+          },
+        })
+        .then((res) => {
+          if (res.result && res.result.data && res.result.data.length > 0) {
+            types.value = res.result.data;
+          }
+        });
+    };
+
     const monthChange = (value) => {
       const nextMonth = dayjs(value);
       const _currentDate = dayjs(currentDate.value);
       const goingDate = dayjs()
         .year(nextMonth.year())
         .month(nextMonth.month())
-        .date(_currentDate.date()).startOf("date");
-      const actualDateNumber = goingDate.isAfter(nextMonth.endOf("month").startOf("date"))
+        .date(_currentDate.date())
+        .startOf("date");
+      const actualDateNumber = goingDate.isAfter(
+        nextMonth.endOf("month").startOf("date")
+      )
         ? nextMonth.endOf("month").startOf("date").valueOf()
         : goingDate.valueOf();
       currentDate.value = actualDateNumber;
@@ -334,15 +354,13 @@ export default {
     };
 
     const pickerChange = (e) => {
-      console.log(e.detail.value);
       pickerValue.value = e.detail.value;
     };
 
     const submit = () => {
       if (
         (!switchValue.value &&
-          (pickerValue.value === 0 ||
-            !work.people ||
+          (!work.people ||
             !work.number ||
             !work.address ||
             Number.isNaN(parseInt(work.people)) ||
@@ -355,7 +373,7 @@ export default {
       }
 
       submitting.value = true;
-      const price = pickers[pickerValue.value].slice(0, -1);
+      const price = types.value[pickerValue.value].price;
       Taro.cloud
         .callFunction({
           name: "addWork",
@@ -448,7 +466,6 @@ export default {
     };
 
     return {
-      pickers,
       currentDate,
       openId,
       marks,
@@ -483,6 +500,7 @@ export default {
       deleteWork,
       handleChange,
       payrollChange,
+      types,
     };
   },
 

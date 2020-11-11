@@ -1,7 +1,8 @@
 export default {
   pages: [
     'pages/index/index',
-    'pages/about/index'
+    'pages/about/index',
+    'pages/manage/index'
   ],
   window: {
     backgroundTextStyle: 'dark',
@@ -19,6 +20,12 @@ export default {
         text: '首页',
         iconPath: './images/home.png',
         selectedIconPath: 'images/homed.png'
+      },
+      {
+        pagePath: 'pages/manage/index',
+        text: '管理',
+        iconPath: './images/manage.png',
+        selectedIconPath: 'images/managed.png'
       },
       {
         pagePath: 'pages/about/index',
