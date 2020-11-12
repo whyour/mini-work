@@ -514,7 +514,20 @@ export default {
     if (!this.addWorkModelShow) {
       this.addWorkModelHide = true;
     }
-    this.getTypes(this.openId);
+    if (this.openId) {
+      Taro.cloud
+        .callFunction({
+          name: "getTypes",
+          data: {
+            openId: this.openId,
+          },
+        })
+        .then((res) => {
+          if (res.result && res.result.data && res.result.data.length > 0) {
+            this.types = res.result.data;
+          }
+        });
+    }
   },
 };
 </script>
