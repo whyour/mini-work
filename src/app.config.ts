@@ -1,8 +1,8 @@
 export default {
   pages: [
     'pages/index/index',
-    'pages/about/index',
-    'pages/manage/index'
+    'pages/manage/index',
+    'pages/about/index'
   ],
   window: {
     backgroundTextStyle: 'dark',
@@ -34,6 +34,5 @@ export default {
         selectedIconPath: 'images/med.png'
       }]
   },
-  cloud: true,
-  entryPagePath: 'pages/index/index'
+  cloud: true
 }

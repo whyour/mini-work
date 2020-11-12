@@ -66,22 +66,64 @@
           </view>
         </view>
       </view>
-      <AtModal class="add-work-modal" :isOpened="addWorkModelShow">
-        <AtModalContent>
-          <at-switch
-            title="日薪模式"
-            :checked="switchValue"
-            @change="handleChange"
-            :border="true"
+    </view>
+    <AtModal class="add-work-modal" :isOpened="addWorkModelShow">
+      <AtModalContent>
+        <at-switch
+          title="日薪模式"
+          :checked="switchValue"
+          @change="handleChange"
+          :border="true"
+        />
+        <view v-if="switchValue && !addWorkModelHide">
+          <AtInput
+            name="number"
+            title="薪资"
+            type="number"
+            placeholder="薪资"
+            :value="work.payroll"
+            @change="payrollChange"
+            :border="false"
           />
-          <view v-if="switchValue && !addWorkModelHide">
+          <AtInput
+            name="address"
+            title="地址"
+            type="text"
+            placeholder="地址"
+            :value="work.address"
+            @change="addressChange"
+            :border="false"
+          />
+        </view>
+        <view v-if="!switchValue && types.length > 0">
+          <picker
+            mode="selector"
+            :value="pickerValue"
+            :range="types"
+            rangeKey="name"
+            @change="pickerChange"
+          >
+            <AtList>
+              <AtListItem title="分类" :extraText="types[pickerValue].name" />
+            </AtList>
+          </picker>
+          <view v-if="!addWorkModelHide">
             <AtInput
               name="number"
-              title="薪资"
+              title="个数"
               type="number"
-              placeholder="薪资"
-              :value="work.payroll"
-              @change="payrollChange"
+              placeholder="总共个数"
+              :value="work.number"
+              @change="numberChange"
+              :border="false"
+            />
+            <AtInput
+              name="people"
+              title="人数"
+              type="number"
+              placeholder="总共人数"
+              :value="work.people"
+              @change="peopleChange"
               :border="false"
             />
             <AtInput
@@ -94,68 +136,26 @@
               :border="false"
             />
           </view>
-          <view v-if="!switchValue && types.length > 0">
-            <picker
-              mode="selector"
-              :value="pickerValue"
-              :range="types"
-              rangeKey="name"
-              @change="pickerChange"
+        </view>
+      </AtModalContent>
+      <AtModalAction>
+        <view class="at-row modal-action">
+          <view class="at-col">
+            <AtButton @click="close">取消</AtButton>
+          </view>
+          <view class="at-col">
+            <AtButton
+              full
+              :loading="submitting"
+              :disabled="submitting"
+              @click="submit"
             >
-              <AtList>
-                <AtListItem title="分类" :extraText="types[pickerValue].name" />
-              </AtList>
-            </picker>
-            <view v-if="!addWorkModelHide">
-              <AtInput
-                name="number"
-                title="个数"
-                type="number"
-                placeholder="总共个数"
-                :value="work.number"
-                @change="numberChange"
-                :border="false"
-              />
-              <AtInput
-                name="people"
-                title="人数"
-                type="number"
-                placeholder="总共人数"
-                :value="work.people"
-                @change="peopleChange"
-                :border="false"
-              />
-              <AtInput
-                name="address"
-                title="地址"
-                type="text"
-                placeholder="地址"
-                :value="work.address"
-                @change="addressChange"
-                :border="false"
-              />
-            </view>
+              确定
+            </AtButton>
           </view>
-        </AtModalContent>
-        <AtModalAction>
-          <view class="at-row modal-action">
-            <view class="at-col">
-              <AtButton @click="close">取消</AtButton>
-            </view>
-            <view class="at-col">
-              <AtButton
-                full
-                :loading="submitting"
-                :disabled="submitting"
-                @click="submit"
-              >
-                确定
-              </AtButton>
-            </view>
-          </view>
-        </AtModalAction>
-      </AtModal>
-    </view>
+        </view>
+      </AtModalAction>
+    </AtModal>
   </view>
 </template>
 
@@ -198,14 +198,16 @@ export default {
 
     onMounted(() => {
       loading.value = true;
+      console.log("home mounted");
       Taro.getStorage({ key: "openId" })
         .then((res) => {
+          console.log("getOpenId end");
           let _openId = res.data;
+          openId.value = _openId;
+          loading.value = false;
           getWorks({ date: currentDate.value, openId: _openId });
           getMonthWorks({ date: currentDate.value, openId: _openId });
           getTypes(_openId);
-          loading.value = false;
-          openId = _openId;
         })
         .catch(() => {
           Taro.cloud
@@ -214,14 +216,15 @@ export default {
               data: {},
             })
             .then((res) => {
+              console.log("getOpenId end");
               if (res.result && res.result.openid) {
                 let _openId = res.result.openid;
+                openId.value = _openId;
+                loading.value = false;
                 Taro.setStorage({ key: "openId", data: _openId });
                 getWorks({ date: currentDate.value, openId: _openId });
                 getMonthWorks({ date: currentDate.value, openId: _openId });
                 getTypes(_openId);
-                loading.value = false;
-                openId = _openId;
               }
             });
         });
@@ -249,6 +252,7 @@ export default {
 
     const getWorks = ({ date, openId }) => {
       partLoadingDay.value = true;
+      console.log("getWorks start");
       Taro.cloud
         .callFunction({
           name: "getWork",
@@ -284,6 +288,7 @@ export default {
 
     const getMonthWorks = ({ date, openId }) => {
       partLoadingMonth.value = true;
+      console.log("getMonthWorks start");
       const min = dayjs(date).startOf("month").valueOf();
       const max = dayjs(date).endOf("month").valueOf();
       Taro.cloud
@@ -311,6 +316,7 @@ export default {
     };
 
     const getTypes = (openId) => {
+      console.log("getTypes start");
       Taro.cloud
         .callFunction({
           name: "getTypes",
@@ -508,6 +514,7 @@ export default {
     if (!this.addWorkModelShow) {
       this.addWorkModelHide = true;
     }
+    this.getTypes(this.openId);
   },
 };
 </script>
