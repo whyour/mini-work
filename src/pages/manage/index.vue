@@ -72,18 +72,18 @@
       <AtModalContent>
         <view v-if="!addTypeModelHide">
           <AtInput
-            name="number"
+            name="name"
             title="名称"
-            type="number"
+            type="text"
             placeholder="名称"
             :value="type.name"
             @change="nameChange"
             :border="false"
           />
           <AtInput
-            name="address"
+            name="price"
             title="价格"
-            type="text"
+            type="number"
             placeholder="价格"
             :value="type.price"
             @change="priceChange"
@@ -123,13 +123,13 @@ export default {
   },
 
   setup() {
+    let openId = ref("");
     const types = ref([]);
     const loading = ref(true);
     let addTypeModelShow = ref(false);
     let submitting = ref(false);
     let addTypeModelHide = ref(true);
     let deleteTypeState = ref(false);
-    let openId = ref("");
     let checkedList = ref([]);
     let partLoading = ref(true);
     let type = reactive({

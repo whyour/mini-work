@@ -163,11 +163,16 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import * as dayjs from "dayjs";
 import Taro from "@tarojs/taro";
+import {AtCalendar} from "taro-ui-vue3";
 
 export default {
+  components: {
+    AtCalendar
+  },
+
   setup() {
-    let currentDate = ref(dayjs().startOf("date").valueOf());
     let openId = ref("");
+    let currentDate = ref(dayjs().startOf("date").valueOf());
     let marks = ref([]);
     let list = ref([]);
     let month = ref([]);
@@ -197,36 +202,23 @@ export default {
     });
 
     onMounted(() => {
-      loading.value = true;
       console.log("home mounted");
-      Taro.getStorage({ key: "openId" })
-        .then((res) => {
-          console.log("getOpenId end");
-          let _openId = res.data;
-          openId.value = _openId;
-          loading.value = false;
-          getWorks({ date: currentDate.value, openId: _openId });
-          getMonthWorks({ date: currentDate.value, openId: _openId });
-          getTypes(_openId);
+      loading.value = true;
+      Taro.cloud
+        .callFunction({
+          name: "login",
+          data: {},
         })
-        .catch(() => {
-          Taro.cloud
-            .callFunction({
-              name: "login",
-              data: {},
-            })
-            .then((res) => {
-              console.log("getOpenId end");
-              if (res.result && res.result.openid) {
-                let _openId = res.result.openid;
-                openId.value = _openId;
-                loading.value = false;
-                Taro.setStorage({ key: "openId", data: _openId });
-                getWorks({ date: currentDate.value, openId: _openId });
-                getMonthWorks({ date: currentDate.value, openId: _openId });
-                getTypes(_openId);
-              }
-            });
+        .then((res) => {
+          console.log("home getOpenId end");
+          if (res.result && res.result.openid) {
+            openId = res.result.openid;
+            Taro.setStorage({ key: "openId", data: openId });
+            getWorks({ date: currentDate.value });
+            getMonthWorks({ date: currentDate.value });
+            getTypes();
+            loading.value = false;
+          }
         });
     });
 
@@ -250,7 +242,7 @@ export default {
       return { numbers, prices };
     };
 
-    const getWorks = ({ date, openId }) => {
+    const getWorks = ({ date }) => {
       partLoadingDay.value = true;
       console.log("getWorks start");
       Taro.cloud
@@ -286,7 +278,7 @@ export default {
         });
     };
 
-    const getMonthWorks = ({ date, openId }) => {
+    const getMonthWorks = ({ date }) => {
       partLoadingMonth.value = true;
       console.log("getMonthWorks start");
       const min = dayjs(date).startOf("month").valueOf();
@@ -315,7 +307,7 @@ export default {
         });
     };
 
-    const getTypes = (openId) => {
+    const getTypes = () => {
       console.log("getTypes start");
       Taro.cloud
         .callFunction({
@@ -345,8 +337,8 @@ export default {
         ? nextMonth.endOf("month").startOf("date").valueOf()
         : goingDate.valueOf();
       currentDate.value = actualDateNumber;
-      getWorks({ date: actualDateNumber, openId });
-      getMonthWorks({ date: actualDateNumber, openId });
+      getWorks({ date: actualDateNumber });
+      getMonthWorks({ date: actualDateNumber });
     };
 
     const addWork = () => {
@@ -515,6 +507,7 @@ export default {
       this.addWorkModelHide = true;
     }
     if (this.openId) {
+    console.log(JSON.stringify(this))
       Taro.cloud
         .callFunction({
           name: "getTypes",
@@ -528,6 +521,6 @@ export default {
           }
         });
     }
-  },
+  }
 };
 </script>

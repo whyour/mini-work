@@ -1,6 +1,5 @@
 import { createApp } from "vue";
 import {
-  AtCalendar,
   AtActivityIndicator,
   AtButton,
   AtTimeline,
@@ -20,45 +19,39 @@ import "./app.scss";
 
 const App = createApp({
   mounted() {
+    console.log('app mounted')
     Taro.cloud.init();
-    Taro.cloud
-      .callFunction({
-        name: "login",
-        data: {},
-      })
-      .then((res) => {
-        if (res.result && res.result.openid) {
-          Taro.setStorage({ key: "openId", data: res.result.openid });
-        }
-      });
   },
   onShow() {
-    const updateManager = Taro.getUpdateManager();
-    updateManager.onCheckForUpdate((res) => {
-      if (res.hasUpdate) {
-        updateManager.onUpdateReady(() => {
-          Taro.showModal({
-            title: "更新提示",
-            content: "检测到新版本, 是否下载新版本并重启小程序?",
-            success: (res) => {
-              if (res.confirm) {
-                updateManager.applyUpdate();
-              }
-            },
+    console.log('app show')
+    setTimeout(() => {
+      const updateManager = Taro.getUpdateManager();
+      updateManager.onCheckForUpdate((res) => {
+        console.log('app check update', res.hasUpdate)
+        if (res.hasUpdate) {
+          updateManager.onUpdateReady(() => {
+            Taro.showModal({
+              title: "更新提示",
+              content: "检测到新版本, 是否下载新版本并重启小程序?",
+              success: (res) => {
+                if (res.confirm) {
+                  updateManager.applyUpdate();
+                }
+              },
+            });
           });
-        });
-        updateManager.onUpdateFailed(() => {
-          Taro.showModal({
-            title: "已经有新版本了哟~",
-            content: "新版本已经上线啦~，请您删除当前小程序，重新搜索打开哟~",
+          updateManager.onUpdateFailed(() => {
+            Taro.showModal({
+              title: "已经有新版本了哟~",
+              content: "新版本已经上线啦~，请您删除当前小程序，重新搜索打开哟~",
+            });
           });
-        });
-      }
-    });
+        }
+      });
+    }, 3000);
   },
 });
 
-App.component("AtCalendar", AtCalendar);
 App.component("AtActivityIndicator", AtActivityIndicator);
 App.component("AtButton", AtButton);
 App.component("AtTimeline", AtTimeline);
