@@ -171,7 +171,8 @@ export default {
   },
 
   setup() {
-    let openId = ref("");
+    let openId = "";
+    let openIdRef = ref("");
     let currentDate = ref(dayjs().startOf("date").valueOf());
     let marks = ref([]);
     let list = ref([]);
@@ -203,6 +204,10 @@ export default {
 
     onMounted(() => {
       console.log("home mounted");
+    });
+
+    const mounted = () => {
+      console.log("home mounted");
       loading.value = true;
       Taro.cloud
         .callFunction({
@@ -213,6 +218,7 @@ export default {
           console.log("home getOpenId end");
           if (res.result && res.result.openid) {
             openId = res.result.openid;
+            openIdRef.value = openId;
             Taro.setStorage({ key: "openId", data: openId });
             getWorks({ date: currentDate.value });
             getMonthWorks({ date: currentDate.value });
@@ -220,7 +226,7 @@ export default {
             loading.value = false;
           }
         });
-    });
+    }
 
     const onDayClick = (item) => {
       const number = dayjs(item.value).valueOf();
@@ -465,7 +471,7 @@ export default {
 
     return {
       currentDate,
-      openId,
+      openIdRef,
       marks,
       list,
       workList,
@@ -499,6 +505,7 @@ export default {
       handleChange,
       payrollChange,
       types,
+      mounted
     };
   },
 
@@ -506,13 +513,13 @@ export default {
     if (!this.addWorkModelShow) {
       this.addWorkModelHide = true;
     }
-    if (this.openId) {
-    console.log(JSON.stringify(this))
+    if (this.openIdRef) {
+      console.log('home on show')
       Taro.cloud
         .callFunction({
           name: "getTypes",
           data: {
-            openId: this.openId,
+            openId: this.openIdRef,
           },
         })
         .then((res) => {
@@ -521,6 +528,11 @@ export default {
           }
         });
     }
+  },
+
+  onReady() {
+    console.log('home on ready')
+    this.mounted()
   }
 };
 </script>
