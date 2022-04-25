@@ -4,4 +4,4 @@
 
 ## 扫码体验
 
-![workload](https://image.whyour.cn/others/workload.jpg)
+![workload](https://user-images.githubusercontent.com/22700758/165003538-7fdd0beb-cd57-42e2-ad74-5290cfc5be0f.jpeg)
