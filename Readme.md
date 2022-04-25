@@ -4,4 +4,4 @@
 
 ## 扫码体验
 
-![workload](https://user-images.githubusercontent.com/22700758/165003538-7fdd0beb-cd57-42e2-ad74-5290cfc5be0f.jpeg)
+![workload](https://user-images.githubusercontent.com/22700758/165003602-30f03f17-59ee-483c-8e5b-4bd9c0a7bdca.jpeg)
